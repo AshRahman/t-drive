@@ -54,9 +54,56 @@ async function main() {
 
 			const contract = network.getContract(chaincodeName);
 
+
+			/////////////////////////////////////////////////////////
 			//create server
+			let express=require('express');
 
+			let app=express();
+			const PORT=3600;
 
+			app.use(express.urlencoded({ extended: false }));
+			app.use(express.json());
+
+			app.get('/',function(req,res)
+			{
+				res.send('Welcome to T-drive');
+			});
+
+			app.get('/book',function(req,res)
+			{
+				res.send('Hello Book Readers hello!');
+			});
+
+			app.post('/register',async function(req, res){
+				const {email,password,name} =req.body;
+				key = `user_${email}`;
+
+				let result = await contract.evaluateTransaction('GetAllAssets');
+			console.log(`*** Result: ${prettyJSONString(result.toString())}`);
+			try {
+				let result= await contract.evaluateTransaction('CreateUser', 
+				key, 
+				email, 
+				password, 
+				name);
+
+				await contract.submitTransaction('CreateUser', 
+				key, 
+				email, 
+				password, 
+				name);
+				res.send(result.toString());
+			} catch (error) {
+				res.error(error.toString());
+			}
+
+			});
+
+			var server=app.listen(PORT,function() {
+				console.log(`Server listening port http://localhost:${PORT}`);
+			});
+			
 
 		} finally {
 			//gateway.disconnect();

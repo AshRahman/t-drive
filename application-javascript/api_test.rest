@@ -1,0 +1,16 @@
+GET http://localhost:3600/ 
+
+###
+
+GET http://localhost:3600/book 
+
+###
+
+POST http://localhost:3600/register
+Content-Type: application/json
+
+{
+    "email": "rockashfaq0@outlook.com",
+    "password":"Ashfaq123",
+    "name":"Ashfaqur Rahman"
+}
