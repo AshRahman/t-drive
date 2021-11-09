@@ -57,13 +57,22 @@ async function main() {
 
 			/////////////////////////////////////////////////////////
 			//create server
-			let express=require('express');
-
+			const express=require('express');
+			const cookieParser =require('cookie-parser');
+			const fileUpload = require('express-fileupload');
+			const path = require('path');
 			let app=express();
 			const PORT=3600;
 
+			app.use(cookieParser());
 			app.use(express.urlencoded({ extended: false }));
 			app.use(express.json());
+
+			app.use(fileUpload({
+				useTempFiles : true,
+				tempFileDir : 'tmp/',
+				createParentPath:true
+			}));
 
 			app.get('/',function(req,res)
 			{
@@ -77,33 +86,91 @@ async function main() {
 
 			app.post('/register',async function(req, res){
 				const {email,password,name} =req.body;
-				key = `user_${email}`;
+				const key = `user_${email}`;
 
-				let result = await contract.evaluateTransaction('GetAllAssets');
-			console.log(`*** Result: ${prettyJSONString(result.toString())}`);
-			try {
-				let result= await contract.evaluateTransaction('CreateUser', 
-				key, 
-				email, 
-				password, 
-				name);
+				try {
+					let result= await contract.evaluateTransaction('CreateUser', key, email, password, name);
 
-				await contract.submitTransaction('CreateUser', 
-				key, 
-				email, 
-				password, 
-				name);
-				res.send(result.toString());
-			} catch (error) {
-				res.error(error.toString());
-			}
+					await contract.submitTransaction('CreateUser', key, email,password, name);
+					res.send(result.toString());
+				} catch (error) {
+					res.status(400).send(error.toString());
+				}
 
 			});
+
+			app.post('/login',async function(req, res){
+				const {email,password} =req.body;
+				try {
+					let result= await contract.evaluateTransaction('FindUser', email, password);
+
+					res.cookie('user',result,{maxAge: 9000000, httpOnly: true});
+					res.send(result.toString());
+				} catch (error) {
+					res.status(400).send(error.toString());
+				}
+
+			});
+
+			app.get('/logout',async function(req, res){
+				try {
+					res.cookie('user',null,{maxAge: 9000000, httpOnly: true});
+					res.send("Logged out Successfully");
+				} catch (error) {
+					res.status(400).send(error.toString());
+				}
+
+			});
+
+			app.post('/file',async function(req, res){
+
+				const key = null;
+				const uploaderEmail = req.cookies.user.Email;
+
+
+				if (req.cookies.user === null){
+					res.status(400).send("You are not logged in");
+					return;
+				}
+				console.log(req.files.uploadedFile);
+				const uploadedFile =req.files.uploadedFile;
+				if(uploadedFile == undefined){
+					res.status(400).send("you must upload a file");
+					return;
+				}
+				const fileName = uploadedFile.name;
+				const fileDestiantion= path.join('public','uploadedFiles',fileName);
+				uploadedFile.mv(fileDestiantion,(err) => {
+					if(err != undefined){
+						res.status(500).send(`Server error failed to move file ${err}`);
+						return;
+					}
+					const downloadLink =path.join(fileDestiantion, fileName);
+					console.log(downloadLink);
+
+					res.send(req.files.uploadedFile);
+
+				});
+
+
+				// try {
+
+				// 	let result= await contract.evaluateTransaction('CreateFile',key,fileName,downloadLink,fileHash,uploaderEmail);
+				// 	await contract.submitTransaction('CreateFile',key,fileName,downloadLink,fileHash,uploaderEmail);
+
+				// 	res.cookie('user',result,{maxAge: 9000000, httpOnly: true});
+				// 	res.send(result.toString());
+				// } catch (error) {
+				// 	res.status(400).send(error.toString());
+				// }
+
+			});
+
 
 			var server=app.listen(PORT,function() {
 				console.log(`Server listening port http://localhost:${PORT}`);
 			});
-			
+
 
 		} finally {
 			//gateway.disconnect();
