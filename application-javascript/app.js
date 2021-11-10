@@ -56,23 +56,30 @@ async function main() {
 
 
 			/////////////////////////////////////////////////////////
-			//create server
 			const express=require('express');
 			const cookieParser =require('cookie-parser');
 			const fileUpload = require('express-fileupload');
+			const crypto = require('crypto');
+			const fs = require('fs');
 			const path = require('path');
+			const util =require('util');
+
+
 			let app=express();
 			const PORT=3600;
 
 			app.use(cookieParser());
 			app.use(express.urlencoded({ extended: false }));
 			app.use(express.json());
+			app.use(express.static('public'));
 
 			app.use(fileUpload({
 				useTempFiles : true,
 				tempFileDir : 'tmp/',
 				createParentPath:true
 			}));
+
+			//API calls
 
 			app.get('/',function(req,res)
 			{
@@ -104,7 +111,7 @@ async function main() {
 				try {
 					let result= await contract.evaluateTransaction('FindUser', email, password);
 
-					res.cookie('user',result,{maxAge: 9000000, httpOnly: true});
+					res.cookie('user',result.toString(),{maxAge: 9000000, httpOnly: true});
 					res.send(result.toString());
 				} catch (error) {
 					res.status(400).send(error.toString());
@@ -114,60 +121,127 @@ async function main() {
 
 			app.get('/logout',async function(req, res){
 				try {
-					res.cookie('user',null,{maxAge: 9000000, httpOnly: true});
-					res.send("Logged out Successfully");
+					res.cookie('user','',{maxAge: -1, httpOnly: true});
+					res.send('Logged out Successfully');
 				} catch (error) {
 					res.status(400).send(error.toString());
 				}
 
 			});
 
+			//Function for sha256 for file hash
+			// eslint-disable-next-line no-inner-declarations
+			async function sha256(filePath){
+				const readFile =util.promisify(fs.readFile);
+
+				const hash = crypto.createHash('sha256');
+				const data = await readFile(filePath);
+				hash.update(data);
+
+				return hash.digest('base64');
+			}
 			app.post('/file',async function(req, res){
-
-				const key = null;
-				const uploaderEmail = req.cookies.user.Email;
-
-
-				if (req.cookies.user === null){
-					res.status(400).send("You are not logged in");
+				if (req.cookies.user == null){
+					res.status(400).send('You are not logged in');
 					return;
 				}
+
 				console.log(req.files.uploadedFile);
 				const uploadedFile =req.files.uploadedFile;
 				if(uploadedFile == undefined){
-					res.status(400).send("you must upload a file");
+					res.status(400).send('you must upload a file');
 					return;
 				}
 				const fileName = uploadedFile.name;
 				const fileDestiantion= path.join('public','uploadedFiles',fileName);
-				uploadedFile.mv(fileDestiantion,(err) => {
-					if(err != undefined){
+				uploadedFile.mv(fileDestiantion,async (err) => {
+					if(err !== undefined){
 						res.status(500).send(`Server error failed to move file ${err}`);
 						return;
 					}
-					const downloadLink =path.join(fileDestiantion, fileName);
-					console.log(downloadLink);
 
-					res.send(req.files.uploadedFile);
+
+					try {
+						const user =JSON.parse(req.cookies.user.toString());
+						const downloadLink =path.join('uploadedFiles', fileName);
+						const uploaderEmail = user.Email;
+						const key =`file_${uploaderEmail}_${fileName}`;
+
+						///Create Hash
+						const fileHash =await sha256(fileDestiantion);
+						let result= await contract.evaluateTransaction('CreateFile',key,fileName,downloadLink,fileHash,uploaderEmail);
+						await contract.submitTransaction('CreateFile',key,fileName,downloadLink,fileHash,uploaderEmail);
+						//res.cookie('user',result,{maxAge: 9000000, httpOnly: true});
+						console.log(result.toString());
+						res.send(result.toString());
+					} catch (error) {
+						res.status(400).send(error.toString());
+					}
 
 				});
 
+			});
 
-				// try {
+			app.get('/file', async function(req, res){
+				if (req.cookies.user == null){
+					res.status(400).send('You are not logged in');
+					return;
+				}
+				try{
+					const user =JSON.parse(req.cookies.user.toString());
+					let result= await contract.evaluateTransaction(
+						'FindFileByUser',
+						user.Email,
+					);
 
-				// 	let result= await contract.evaluateTransaction('CreateFile',key,fileName,downloadLink,fileHash,uploaderEmail);
-				// 	await contract.submitTransaction('CreateFile',key,fileName,downloadLink,fileHash,uploaderEmail);
+					res.send(result.toString());
 
-				// 	res.cookie('user',result,{maxAge: 9000000, httpOnly: true});
-				// 	res.send(result.toString());
-				// } catch (error) {
-				// 	res.status(400).send(error.toString());
-				// }
+				}catch(err){
+					res.send(400).send(err.toString());
+				}
+
+			});
+
+			app.get('/file/:fileKey', async function(req, res){
+				if (req.cookies.user == null){
+					res.status(400).send('You are not logged in');
+					return;
+				}
+
+				const fileKey= req.params.fileKey;
+				try{
+					const user =JSON.parse(req.cookies.user.toString());
+					let result= await contract.evaluateTransaction(
+						'FindFile',
+						fileKey,
+					);
+					const uploadedFile =JSON.parse(result);
+					if(uploadedFile.UploaderEmail !== user.Email){
+						res.status(403).send("You're not authoreised to view this file");
+					}else{
+						res.send(result.toString());
+					}
+				}catch(err){
+					res.send(400).send(err.toString());
+				}
 
 			});
 
 
-			var server=app.listen(PORT,function() {
+
+
+
+/*	try {
+				
+
+
+				console.log(`File found\n Result: ${result}\n`);
+			} catch (error) {
+				console.log(`*** Successfully caught the Error: \n    ${error}\n`);
+			}
+ */
+
+			let server=app.listen(PORT,function() {
 				console.log(`Server listening port http://localhost:${PORT}`);
 			});
 

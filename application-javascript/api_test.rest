@@ -10,7 +10,7 @@ POST http://localhost:3600/register
 Content-Type: application/json
 
 {
-    "email": "rockashfaq0@outlook.com",
+    "email": "rockashfaq@outlook.com",
     "password":"Ashfaq123",
     "name":"Ashfaqur Rahman"
 }
@@ -42,3 +42,10 @@ Content-Disposition: form-data; name="uploadedFile"; filename="api_test.rest"
 < ./api_test.rest
 ------WebKitFormBoundary7MA4YWxkTrZu0gW--
 
+###
+
+GET http://localhost:3600/file
+
+###
+
+GET http://localhost:3600/file/file_rockashfaq0@outlook.com_api_test.rest

@@ -206,8 +206,6 @@ async function main() {
 					'rockashfaq0@outlook.com',
 				);
 
-			
-
 				console.log(`File found by email\n Result: ${result}\n`);
 			} catch (error) {
 				console.log(`*** Successfully caught the Error: \n    ${error}\n`);
@@ -265,9 +263,9 @@ async function main() {
 
 			try {
 				let result= await contract.evaluateTransaction(
-				'FindFileShareByUser',
-				 'rockashfaq0@gmail.com',
-				 );
+					'FindFileShareByUser',
+					email,
+				);
 
 
 				console.log(`File Shared list\n Result: ${result}\n`);
