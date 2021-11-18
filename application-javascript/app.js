@@ -9,7 +9,7 @@ const { buildCAClient, registerAndEnrollUser, enrollAdmin } = require('../../tes
 const { buildCCPOrg1, buildWallet } = require('../../test-application/javascript/AppUtil.js');
 
 const channelName = 'mychannel';
-const chaincodeName = 'tdrive1';
+const chaincodeName = 'tdrive2';
 const mspOrg1 = 'Org1MSP';
 const walletPath = path.join(__dirname, 'wallet');
 const org1UserId = 'appUser';
@@ -66,7 +66,7 @@ async function main() {
 
 
 			let app=express();
-			const PORT=3600;
+			const PORT=3000;
 
 			app.use(cookieParser());
 			app.use(express.urlencoded({ extended: false }));
@@ -163,7 +163,7 @@ async function main() {
 
 					try {
 						const user =JSON.parse(req.cookies.user.toString());
-						const downloadLink =path.join('uploadedFiles', fileName);
+						const downloadLink =path.join('public','uploadedFiles', fileName);
 						const uploaderEmail = user.Email;
 						const key =`file_${uploaderEmail}_${fileName}`;
 
@@ -227,19 +227,93 @@ async function main() {
 
 			});
 
+			app.put('/file/:fileKey', async function(req, res){
+				if (req.cookies.user == null){
+					res.status(400).send('You are not logged in');
+					return;
+				}
+
+				const fileKey= req.params.fileKey;
+				try{
+					const user =JSON.parse(req.cookies.user.toString());
+					let result= await contract.evaluateTransaction(
+						'FindFile',
+						fileKey,
+					);
+
+					const uploadedFile =JSON.parse(result);
+					const newFileName = req.body.newFileName;
+
+					if(uploadedFile.UploaderEmail !== user.Email){
+						res.status(403).send("You're not authorised to update this file");
+					}else{
+
+						///move file and update download link
+						const renameFile = util.promisify(fs.rename);
+
+						const srcPath = uploadedFile.DownloadLink;//path.join('public',uploadedFile.DownloadLink);
+						const destinationPath =path.join('public','uploadedFiles',newFileName);
+						const err = await renameFile(srcPath, destinationPath);
+
+						const newDownloadLink = path.join('uploadedFiles',newFileName);
+						console.log(newDownloadLink);
+						if(err != undefined) {
+							res.status(500).send(`Server Error ${err}`);
+							return;
+						}
+
+						let result= await contract.evaluateTransaction('ChangeFileName', fileKey,newFileName,newDownloadLink);
+						await contract.submitTransaction('ChangeFileName', fileKey,newFileName,newDownloadLink);
+						res.send(result.toString());
+					}
+				}catch(err){
+					res.status(400).send(err.toString());
+				}
+
+			});
+
+			app.delete('/file/:fileKey', async function(req, res){
+				if (req.cookies.user == null){
+					res.status(400).send('You are not logged in');
+					return;
+				}
+
+				const fileKey= req.params.fileKey;
+				try{
+					const user =JSON.parse(req.cookies.user.toString());
+					let result= await contract.evaluateTransaction(
+						'FindFile',
+						fileKey,
+					);
+
+					const uploadedFile =JSON.parse(result);
+
+					if(uploadedFile.UploaderEmail !== user.Email){
+						res.status(403).send("You're not authorised to delete this file");
+					}else{
+
+						///delete file and update download link
+						const deleteFile = util.promisify(fs.unlink);
+
+						const srcPath = path.join('public',uploadedFile.DownloadLink);
+						const err = await deleteFile(srcPath);
+
+						if(err != undefined) {
+							res.status(500).send(`Server Error ${err}`);
+							return;
+						}
+
+						let result= await contract.evaluateTransaction('DeleteFile', fileKey);
+						await contract.submitTransaction('DeleteFile', fileKey);
+						res.send(result.toString());
+					}
+				}catch(err){
+					res.status(400).send(err.toString());
+				}
+
+			});
 
 
-
-
-/*	try {
-				
-
-
-				console.log(`File found\n Result: ${result}\n`);
-			} catch (error) {
-				console.log(`*** Successfully caught the Error: \n    ${error}\n`);
-			}
- */
 
 			let server=app.listen(PORT,function() {
 				console.log(`Server listening port http://localhost:${PORT}`);

@@ -74,13 +74,15 @@ class TDrive extends Contract {
     }
 
     //Change the name of the file
-    async ChangeFileName(ctx, key, newName) {
+    async ChangeFileName(ctx, key, newName, newDownloadlink) {
         const fileJSON = await ctx.stub.getState(key); 
         if (!fileJSON || fileJSON.length === 0) {
             throw new Error(`The file does not exist`);
         }
         let file = JSON.parse(fileJSON.toString());
         file.Name= newName;
+        file.DownloadLink= newDownloadlink;
+
         await ctx.stub.putState(key, Buffer.from(JSON.stringify(file)));
         return JSON.stringify(file);
     }
