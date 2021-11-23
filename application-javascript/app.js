@@ -9,7 +9,7 @@ const { buildCAClient, registerAndEnrollUser, enrollAdmin } = require('../../tes
 const { buildCCPOrg1, buildWallet } = require('../../test-application/javascript/AppUtil.js');
 
 const channelName = 'mychannel';
-const chaincodeName = 'tdrive2';
+const chaincodeName = 'tdrive4';
 const mspOrg1 = 'Org1MSP';
 const walletPath = path.join(__dirname, 'wallet');
 const org1UserId = 'appUser';
@@ -216,13 +216,25 @@ async function main() {
 						fileKey,
 					);
 					const uploadedFile =JSON.parse(result);
-					if(uploadedFile.UploaderEmail !== user.Email){
-						res.status(403).send("You're not authoreised to view this file");
+
+
+					result= await contract.evaluateTransaction(
+						'FindFileShareWithUser',
+						user.Email,
+					);
+					let filesSharedWithMe= JSON.parse(result);
+					filesSharedWithMe= filesSharedWithMe.map(data=> data.Record);
+					console.log(filesSharedWithMe);
+
+					const thisFileSharedWithMe =filesSharedWithMe.some(fileShare =>fileShare.FileKey == uploadedFile.Key);
+
+					if(uploadedFile.UploaderEmail != user.Email && !thisFileSharedWithMe){
+						res.status(403).send("You're not authorised to view this file");
 					}else{
-						res.send(result.toString());
+						res.send(JSON.stringify(uploadedFile));
 					}
 				}catch(err){
-					res.send(400).send(err.toString());
+					res.status(400).send(err.toString());
 				}
 
 			});
@@ -312,8 +324,103 @@ async function main() {
 				}
 
 			});
+			app.post('/fileShare',async function(req, res){
+				const {fileKey,sharedWithEmail} =req.body;
+				const key = `fileShare_${fileKey}_${sharedWithEmail}`;
 
+				try {
+					let result= await contract.evaluateTransaction('ShareFile', key, fileKey,sharedWithEmail);
 
+					await contract.submitTransaction('ShareFile', key, fileKey,sharedWithEmail);
+					res.send(result.toString());
+				} catch (error) {
+					res.status(400).send(error.toString());
+				}
+
+			});
+			app.get('/fileShare/byFile/:fileKey', async function(req, res){
+				if (req.cookies.user == null){
+					res.status(400).send('You are not logged in');
+					return;
+				}
+
+				const fileKey= req.params.fileKey;
+				try{
+					const user =JSON.parse(req.cookies.user.toString());
+					let result= await contract.evaluateTransaction(
+						'FindFile',
+						fileKey,
+					);
+					const uploadedFile =JSON.parse(result);
+					if(uploadedFile.UploaderEmail !== user.Email){
+						res.status(403).send("You're not authoreised to view this file");
+					}else{
+						let result= await contract.evaluateTransaction(
+							'FindFileShareByFile',
+							fileKey,
+						);
+						res.send(result.toString());
+					}
+				}catch(err){
+					res.status(400).send(err.toString());
+				}
+
+			});
+
+			app.get('/fileShare/withMe', async function(req, res){
+				if (req.cookies.user == null){
+					res.status(400).send('You are not logged in');
+					return;
+				}
+
+				try{
+					const user =JSON.parse(req.cookies.user.toString());
+					let result= await contract.evaluateTransaction(
+						'FindFileShareWithUser',
+						user.Email,
+					);
+					res.send(result.toString());
+				}catch(err){
+					res.send(400).send(err.toString());
+				}
+
+			});
+			app.delete('/fileShare/:fileShareKey', async function(req, res){
+				if (req.cookies.user == null){
+					res.status(400).send('You are not logged in');
+					return;
+				}
+
+				const fileShareKey= req.params.fileShareKey;
+				try{
+					const user =JSON.parse(req.cookies.user.toString());
+					let result= await contract.evaluateTransaction(
+						'FindFileShare',
+						fileShareKey,
+					);
+
+					const fileShare =JSON.parse(result);
+					const fileKey = fileShare.FileKey;
+					result = await contract.evaluateTransaction(
+						'FindFile',
+						fileKey,
+					);
+					
+					const uploadedFile =JSON.parse(result);
+
+					if(uploadedFile.UploaderEmail != user.Email && fileShare.SharedWithEmail != user.Email){
+						res.status(403).send("You're not authorised to delete this file");
+					}else{
+
+						let result= await contract.evaluateTransaction('DeleteFileShare', fileShareKey);
+						await contract.submitTransaction('DeleteFileShare', fileShareKey);
+						res.send(result.toString());
+					}
+				}catch(err){
+					res.status(400).send(err.toString());
+				}
+
+			});
 
 			let server=app.listen(PORT,function() {
 				console.log(`Server listening port http://localhost:${PORT}`);

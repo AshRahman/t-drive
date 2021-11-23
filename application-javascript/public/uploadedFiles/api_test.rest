@@ -1,3 +1,4 @@
+
 GET http://localhost:3000/ 
 
 ###
@@ -21,7 +22,7 @@ POST http://localhost:3000/login
 Content-Type: application/json
 
 {
-    "email": "rockashfaq0@gmail.com",
+    "email": "rockashfaq0@outlook.com",
     "password":"Ashfaq123"
 }
 

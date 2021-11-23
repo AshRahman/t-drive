@@ -1,3 +1,4 @@
+
 GET http://localhost:3000/ 
 
 ###
@@ -10,7 +11,7 @@ POST http://localhost:3000/register
 Content-Type: application/json
 
 {
-    "email": "rockashfaq0@outlook.com",
+    "email": "rockashfaq0@gmail.com",
     "password":"Ashfaq123",
     "name":"Ashfaqur Rahman"
 }
@@ -21,7 +22,7 @@ POST http://localhost:3000/login
 Content-Type: application/json
 
 {
-    "email": "rockashfaq0@gmail.com",
+    "email": "rockashfaq0@outlook.com",
     "password":"Ashfaq123"
 }
 
@@ -83,4 +84,4 @@ GET http://localhost:3000/fileShare/withMe
 
 ###
 
-DELETE http://localhost:3000/fileShare/fileShare_file_rockashfaq0@outlook.com_api_test.rest_rockashfaq0@gmail.com
+DELETE http://localhost:3000/file/fileShare_file_rockashfaq0@outlook.com_api_test.rest_rockashfaq0@gmail.com

@@ -99,12 +99,12 @@ class TDrive extends Contract {
     }
     //Find file by user email
     async FindFileByUser(ctx, email) {
-      let queryString ={};
-      queryString.selector={};
-      queryString.selector.DocType='file';
-      queryString.selector.UploaderEmail=email;
+        let queryString ={};
+        queryString.selector={};
+        queryString.selector.DocType='file';
+        queryString.selector.UploaderEmail=email;
 
-      return await this.GetQueryResultForQueryString(ctx, JSON.stringify(queryString));
+        return await this.GetQueryResultForQueryString(ctx, JSON.stringify(queryString));
     
     }
     async ShareFile(ctx, key, fileKey,sharedWithEmail) {
@@ -122,6 +122,14 @@ class TDrive extends Contract {
         return JSON.stringify(fileShare);
     }
 
+    async FindFileShare(ctx, fileShareKey) {
+        const fileShareJSON = await ctx.stub.getState(fileShareKey); 
+        if (!fileShareJSON || fileShareJSON.length === 0) {
+            throw new Error(`The Shared file does not exist`);
+        }
+        return fileShareJSON.toString();
+    }
+
     async FindFileShareByFile(ctx, fileKey) {
         let queryString ={};
         queryString.selector={};
@@ -130,9 +138,9 @@ class TDrive extends Contract {
   
         return await this.GetQueryResultForQueryString(ctx, JSON.stringify(queryString));
       
-      }
+    }
 
-      async DeleteFileShare(ctx, key) {
+    async DeleteFileShare(ctx, key) {
         const fileShareJSON = await ctx.stub.getState(key);
         if (!fileShareJSON || fileShareJSON.length === 0) {
             throw new Error(`The file does not exist`);
@@ -144,13 +152,13 @@ class TDrive extends Contract {
 
     async GetQueryResultForQueryString(ctx, queryString) {
 
-		let resultsIterator = await ctx.stub.getQueryResult(queryString);
-		let results = await this._GetAllResults(resultsIterator, false);
+        let resultsIterator = await ctx.stub.getQueryResult(queryString);
+        let results = await this._GetAllResults(resultsIterator, false);
 
-		return JSON.stringify(results);
-	}
+        return JSON.stringify(results);
+    }
 
-async FindFileShareByUser(ctx, userEmail) {
+    async FindFileShareWithUser(ctx, userEmail) {
         let queryString ={};
         queryString.selector={};
         queryString.selector.DocType='fileShare';
@@ -158,41 +166,41 @@ async FindFileShareByUser(ctx, userEmail) {
   
         return await this.GetQueryResultForQueryString(ctx, JSON.stringify(queryString));
       
-      }
+    }
 
 
     async _GetAllResults(iterator, isHistory) {
-		let allResults = [];
-		let res = await iterator.next();
-		while (!res.done) {
-			if (res.value && res.value.value.toString()) {
-				let jsonRes = {};
-				console.log(res.value.value.toString('utf8'));
-				if (isHistory && isHistory === true) {
-					jsonRes.TxId = res.value.txId;
-					jsonRes.Timestamp = res.value.timestamp;
-					try {
-						jsonRes.Value = JSON.parse(res.value.value.toString('utf8'));
-					} catch (err) {
-						console.log(err);
-						jsonRes.Value = res.value.value.toString('utf8');
-					}
-				} else {
-					jsonRes.Key = res.value.key;
-					try {
-						jsonRes.Record = JSON.parse(res.value.value.toString('utf8'));
-					} catch (err) {
-						console.log(err);
-						jsonRes.Record = res.value.value.toString('utf8');
-					}
-				}
-				allResults.push(jsonRes);
-			}
-			res = await iterator.next();
-		}
-		iterator.close();
-		return allResults;
-	}
+        let allResults = [];
+        let res = await iterator.next();
+        while (!res.done) {
+            if (res.value && res.value.value.toString()) {
+                let jsonRes = {};
+                console.log(res.value.value.toString('utf8'));
+                if (isHistory && isHistory === true) {
+                    jsonRes.TxId = res.value.txId;
+                    jsonRes.Timestamp = res.value.timestamp;
+                    try {
+                        jsonRes.Value = JSON.parse(res.value.value.toString('utf8'));
+                    } catch (err) {
+                        console.log(err);
+                        jsonRes.Value = res.value.value.toString('utf8');
+                    }
+                } else {
+                    jsonRes.Key = res.value.key;
+                    try {
+                        jsonRes.Record = JSON.parse(res.value.value.toString('utf8'));
+                    } catch (err) {
+                        console.log(err);
+                        jsonRes.Record = res.value.value.toString('utf8');
+                    }
+                }
+                allResults.push(jsonRes);
+            }
+            res = await iterator.next();
+        }
+        iterator.close();
+        return allResults;
+    }
 
 
     // UpdateAsset updates an existing asset in the world state with provided parameters.

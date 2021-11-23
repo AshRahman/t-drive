@@ -9,7 +9,7 @@ const { buildCAClient, registerAndEnrollUser, enrollAdmin } = require('../../tes
 const { buildCCPOrg1, buildWallet } = require('../../test-application/javascript/AppUtil.js');
 
 const channelName = 'mychannel';
-const chaincodeName = 'tdrive2';
+const chaincodeName = 'tdrive4';
 const mspOrg1 = 'Org1MSP';
 const walletPath = path.join(__dirname, 'wallet');
 const org1UserId = 'appUser';
@@ -255,8 +255,8 @@ async function main() {
 
 			try {
 				let result= await contract.evaluateTransaction(
-					'FindFileShareByUser',
-					email,
+					'FindFileShareWithUser',
+					'rockashfaq0@gmail.com',
 				);
 
 
