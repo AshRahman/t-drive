@@ -9,7 +9,7 @@ const { buildCAClient, registerAndEnrollUser, enrollAdmin } = require('../../tes
 const { buildCCPOrg1, buildWallet } = require('../../test-application/javascript/AppUtil.js');
 
 const channelName = 'mychannel';
-const chaincodeName = 'tdrive4';
+const chaincodeName = 'tdrive2';
 const mspOrg1 = 'Org1MSP';
 const walletPath = path.join(__dirname, 'wallet');
 const org1UserId = 'appUser';
@@ -126,6 +126,29 @@ async function main() {
 				} catch (error) {
 					res.status(400).send(error.toString());
 				}
+
+			});
+			app.get('/profile',async function(req,res){
+				if(req.cookies.user == null){
+					res.json({isLoggedIn:false
+					});
+					return;
+				}
+				try{
+					let user=JSON.parse(req.cookies.user.toString());
+					const key =user.Key;
+
+					let result= await contract.evaluateTransaction('FindUserByKey', key);
+
+					user= JSON.parse(result.toString());
+					user.isLoggedIn = true;
+
+					res.json(user);
+
+				} catch (error){
+					res.status(500).send(`Error: ${error}`);
+				}
+
 
 			});
 

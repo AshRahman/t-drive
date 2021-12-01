@@ -64,6 +64,17 @@ class TDrive extends Contract {
         return JSON.stringify(file);
     }
 
+    async FindUserByKey(ctx,key){
+        const userJSON = await ctx.stub.getState(key);
+        if(!userJSON || userJSON.length == 0){
+            throw new Error(`This User doesnt exist`);
+        }
+
+        let user = JSON.parse(userJSON.toString());
+        user.Password = 'SECRET';
+
+        return JSON.stringify(user);
+    }
     //Find File
     async FindFile(ctx, key) {
         const fileJSON = await ctx.stub.getState(key); 
