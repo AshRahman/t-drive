@@ -9,7 +9,7 @@ const { buildCAClient, registerAndEnrollUser, enrollAdmin } = require('../../tes
 const { buildCCPOrg1, buildWallet } = require('../../test-application/javascript/AppUtil.js');
 
 const channelName = 'mychannel';
-const chaincodeName = 'tdrive2';
+const chaincodeName = 'tdrive';
 const mspOrg1 = 'Org1MSP';
 const walletPath = path.join(__dirname, 'wallet');
 const org1UserId = 'appUser';
@@ -63,10 +63,15 @@ async function main() {
 			const fs = require('fs');
 			const path = require('path');
 			const util =require('util');
-
+			let cors = require('cors');
 
 			let app=express();
 			const PORT=3000;
+
+			app.use(cors({
+				origin: "http://localhost:3001",
+				credentials: true
+			}));
 
 			app.use(cookieParser());
 			app.use(express.urlencoded({ extended: false }));

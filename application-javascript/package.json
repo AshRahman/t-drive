@@ -14,6 +14,7 @@
     "author": "Hyperledger",
     "license": "Apache-2.0",
     "dependencies": {
+        "cors": "^2.8.5",
         "fabric-ca-client": "^2.2.4",
         "fabric-network": "^2.2.4"
     },
