@@ -1,5 +1,6 @@
 import { Form, Input, InputNumber, Button } from 'antd';
 import {useRouter} from 'next/router';
+import useUser from '../lib/useUser';
 const layout = {
   labelCol: {
     span: 4,
@@ -24,6 +25,7 @@ const validateMessages = {
 
 export default function RegisterPage(){
 
+  useUser({ redirectTo: '/myFiles',redirectIfFound= true })
   const router = useRouter();
   const handleSubmit = async (values) => {
     const {name,email, password} =values.user;

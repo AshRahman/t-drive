@@ -127,9 +127,9 @@ async function main() {
 			app.get('/logout',async function(req, res){
 				try {
 					res.cookie('user','',{maxAge: -1, httpOnly: true});
-					res.send('Logged out Successfully');
+					res.json({status:'Logged out Successfully'});
 				} catch (error) {
-					res.status(400).send(error.toString());
+					res.status(400).json({error:error.toString()});
 				}
 
 			});
@@ -151,7 +151,10 @@ async function main() {
 					res.json(user);
 
 				} catch (error){
-					res.status(500).send(`Error: ${error}`);
+					res.status(500).json({
+						error:`Error: ${error}`,
+						isLoggedIn: false,
+					});
 				}
 
 

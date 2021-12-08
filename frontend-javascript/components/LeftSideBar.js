@@ -4,7 +4,7 @@ import {
   BarChartOutlined,
   CloudOutlined,
   ShopOutlined,
-  TeamOutlined,
+  TeamOutlined,LogoutOutlined,
   UserOutlined,UserAddOutlined,
   UploadOutlined,ShareAltOutlined,
   FolderOpenOutlined
@@ -44,6 +44,9 @@ export default function LeftSideBar() {
       </Menu.Item>
       <Menu.Item key="5" icon={<ShareAltOutlined />} onClick={()=>router.push('/shareWithMe')}>
         Shared With Me
+      </Menu.Item>
+      <Menu.Item key="6" icon={<LogoutOutlined />} onClick={()=>router.push('/logout')}>
+        Logout
       </Menu.Item>
       
     </Menu>
