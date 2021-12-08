@@ -106,7 +106,7 @@ async function main() {
 					await contract.submitTransaction('CreateUser', key, email,password, name);
 					res.send(result.toString());
 				} catch (error) {
-					res.status(400).send(error.toString());
+					res.status(400).json({error:error.toString()});
 				}
 
 			});
@@ -119,7 +119,7 @@ async function main() {
 					res.cookie('user',result.toString(),{maxAge: 9000000, httpOnly: true});
 					res.send(result.toString());
 				} catch (error) {
-					res.status(400).send(error.toString());
+					res.status(400).json({error:error.toString()});
 				}
 
 			});
