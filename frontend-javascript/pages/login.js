@@ -1,5 +1,6 @@
 import { Form, Input, InputNumber, Button } from 'antd';
 import {useRouter} from 'next/router';
+import useUser from '../lib/useUser';
 const layout = {
   labelCol: {
     span: 4,
@@ -23,7 +24,7 @@ const validateMessages = {
 /* eslint-enable no-template-curly-in-string */
 
 export default function LoginPage(){
-  useUser({ redirectTo: '/myFiles',redirectIfFound= true })
+  //useUser({ redirectTo: '/myFiles',redirectIfFound: true })
 
   const router = useRouter();
   const handleSubmit = async (values) => {
@@ -53,6 +54,8 @@ export default function LoginPage(){
     console.log(data);
     if('error' in (data)){
       alert("wrong email or password")
+    }else{
+      router.push('/myfiles');
     }
     
 

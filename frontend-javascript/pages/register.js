@@ -25,7 +25,7 @@ const validateMessages = {
 
 export default function RegisterPage(){
 
-  useUser({ redirectTo: '/myFiles',redirectIfFound= true })
+  //useUser({ redirectTo: '/',redirectIfFound: true })
   const router = useRouter();
   const handleSubmit = async (values) => {
     const {name,email, password} =values.user;

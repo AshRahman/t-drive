@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import Router from "next/router";
 import useSWR from "swr";
 
-export default function useUser({redirectTo = "",redirectIfFound = false,} = {}) {
+export default function useUser({redirectTo = false,redirectIfFound = false} = {}) {
 
 
     const fetcher = (url) => fetch(url,{
