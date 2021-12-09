@@ -24,7 +24,7 @@ const validateMessages = {
 /* eslint-enable no-template-curly-in-string */
 
 export default function LoginPage(){
-  //useUser({ redirectTo: '/myFiles',redirectIfFound: true })
+  useUser({ redirectTo: '/myFiles',redirectIfFound: true })
 
   const router = useRouter();
   const handleSubmit = async (values) => {
@@ -54,8 +54,6 @@ export default function LoginPage(){
     console.log(data);
     if('error' in (data)){
       alert("wrong email or password")
-    }else{
-      router.push('/myfiles');
     }
     
 

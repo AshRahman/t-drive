@@ -1,9 +1,9 @@
-import Router from 'next/router';
+import {useRouter} from 'next/router';
 import { useState } from 'react';
 
 export default function LogOut() {
     const [logoutError,setLogoutError] = useState("");
-
+    const router = useRouter();
     async function logout(){
 
         const url = 'http://localhost:3000/logout';
@@ -18,7 +18,7 @@ export default function LogOut() {
             setLogoutError(data.error);
           }
           else{
-            await Router.push('/');
+            await router.push('/');
           }
     }
 

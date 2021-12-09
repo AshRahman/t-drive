@@ -1,9 +1,9 @@
 import { useEffect } from "react";
-import Router from "next/router";
+import {useRouter} from 'next/router';
 import useSWR from "swr";
 
 export default function useUser({redirectTo = false,redirectIfFound = false} = {}) {
-
+  const router = useRouter();
 
     const fetcher = (url) => fetch(url,{
         mode: 'cors',  
@@ -16,7 +16,6 @@ export default function useUser({redirectTo = false,redirectIfFound = false} = {
   });
 
   useEffect(() => {
-
     // if no redirect needed, just return (example: already on /dashboard)
     // if user data not yet there (fetch in progress, logged in or not) then don't do anything yet
     if (!redirectTo || !user) return;
@@ -27,7 +26,7 @@ export default function useUser({redirectTo = false,redirectIfFound = false} = {
       // If redirectIfFound is also set, redirect if the user was found
       (redirectIfFound && user?.isLoggedIn)
     ) {
-      Router.push(redirectTo);
+      router.push(redirectTo);
     }
   }, [user, redirectIfFound, redirectTo]);
 
